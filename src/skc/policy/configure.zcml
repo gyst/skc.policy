@@ -16,6 +16,15 @@
       description="Installs the skc.policy package"
       provides="Products.GenericSetup.interfaces.EXTENSION"
       />
-  <!-- -*- extra stuff goes here -*- -->
+
+  <genericsetup:upgradeStep
+      title="plone4_cleanup"
+      description="Cleanup Plone4 installation"
+      source="0000"
+      destination="0001"
+      handler=".upgrades.plone4_cleanup"
+      sortkey="1"
+      profile="skc.policy:default"
+      />
 
 </configure>
