@@ -26,15 +26,10 @@ REMOVE_CONTENT = {
     'collective.cover': 'collective.cover.content',
 }
 
-# easier here, than forking and fixing all packages
-REMOVE_LAYERS = [
-    'collective.improvedbyline',
-    'collective.contentleadimage',
-]
-
 
 def plone4_cleanup(context):
     """Trigger all the uninstallers for to-be-removed products."""
+    portal = api.portal.get()
     qi_tool = api.portal.get_tool('portal_quickinstaller')
 
     # first, make sure all our new un-installers are installed :-)
@@ -53,19 +48,23 @@ def plone4_cleanup(context):
         for brain in catalog(portal_type=ctype):
             api.content.delete(brain.getObject())
 
-    # remove browser layers of packages without proper uninstall
-    for p in REMOVE_LAYERS:
-        log.info("Removing stale browser layers for: %s", p)
-        try:
-            unregister_layer(p)
-        except KeyError:
-            # already gone
-            pass
+    # sjeez TTW persistent interface references
+    pvc = portal.portal_view_customizations
+    log.info("Removing portal_view_customizations TTW cruft")
+    pvc.manage_delObjects(pvc.objectIds())
 
-    # finally remove all the unwanted cruft packages themselves
+    # remove all the unwanted cruft packages themselves
     for p in REMOVE_PRODUCTS:
         log.info("Uninstalling: %s", p)
         qi_tool.uninstallProducts([p])
+
+    # clear the archetypes reference catalog
+    log.info("Clearing reference catalog")
+    portal.reference_catalog.manage_catalogClear()
+
+    # migrate to plone.app.contenttypes
+    log.info("Enabling plone.app.contenttypes")
+    qi_tool.installProducts(['plone.app.contenttypes'])
 
     log.info("Committing changes.")
     transaction.commit()
