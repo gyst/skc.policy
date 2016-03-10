@@ -20,6 +20,7 @@ REMOVE_PRODUCTS = [
     'collective.contentleadimage',
     'sc.contentrules.groupbydate',
     'plone.app.blocks',
+    'skc.theme',
 ]
 
 REMOVE_CONTENT = {
@@ -61,6 +62,11 @@ def plone4_cleanup(context):
     # clear the archetypes reference catalog
     log.info("Clearing reference catalog")
     portal.reference_catalog.manage_catalogClear()
+
+    # clean cruft from catalog
+    log.info("Rebuilding portal_catalog. This will take a loooong time.")
+    ctool = api.portal.get_tool('portal_catalog')
+    ctool.clearFindAndRebuild()
 
     # migrate to plone.app.contenttypes
     log.info("Enabling plone.app.contenttypes")
